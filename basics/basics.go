@@ -1,9 +1,11 @@
 package basics
 
 import (
+	"bufio"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -93,12 +95,7 @@ func calculateScore(buffer []byte) float64 {
 	return score
 }
 
-func DecryptTheMessage(hexString string) ([]byte, error) {
-	cipher, err := hex.DecodeString(hexString)
-	if err != nil {
-		return nil, err
-	}
-
+func DecryptTheMessage(cipher []byte) ([]byte, error) {
 	bestKey := byte(0)
 	bestScore := 0.0
 	for k := range 256 {
@@ -115,4 +112,53 @@ func DecryptTheMessage(hexString string) ([]byte, error) {
 
 	decryptedMessage := singleByteXOR(cipher, bestKey)
 	return decryptedMessage, nil
+}
+
+func readFileLines(filename string) ([]string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var lines []string
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return lines, nil
+}
+
+func FindEncryptedLine(filename string) ([]byte, error) {
+	lines, err := readFileLines(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	bestScore := 0.0
+	var bestLine []byte
+	for _, line := range lines {
+		decoded, err := hex.DecodeString(line)
+		if err != nil {
+			return nil, err
+		}
+
+		decrypted, err := DecryptTheMessage(decoded)
+		if err != nil {
+			return nil, err
+		}
+
+		score := calculateScore(decrypted)
+		if score > bestScore {
+			bestScore = score
+			bestLine = decrypted
+		}
+	}
+
+	return bestLine, nil
 }
