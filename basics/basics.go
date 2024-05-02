@@ -162,3 +162,14 @@ func FindEncryptedLine(filename string) ([]byte, error) {
 
 	return bestLine, nil
 }
+
+func RepeatingKeyXOR(plaintext, key []byte) []byte {
+	result := make([]byte, len(plaintext))
+	keyLength := len(key)
+
+	for i, v := range plaintext {
+		result[i] = v ^ key[i%keyLength]
+	}
+
+	return result
+}
