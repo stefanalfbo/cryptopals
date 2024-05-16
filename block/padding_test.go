@@ -34,4 +34,18 @@ func TestPKCS7Padding(t *testing.T) {
 			t.Errorf("Expected %v, was %v", data, actual)
 		}
 	})
+
+	t.Run("Validate that the value for the padding adapts to the length needed", func(t *testing.T) {
+		expected := []byte("YELLOW SUBMARINE\x06\x06\x06\x06\x06\x06")
+		blockSize := 22
+
+		actual, err := block.PKCS7Padding(data, blockSize)
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+
+		if string(actual) != string(expected) {
+			t.Errorf("Expected %v, was %v", expected, actual)
+		}
+	})
 }
